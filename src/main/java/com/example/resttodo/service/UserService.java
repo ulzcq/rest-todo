@@ -4,6 +4,7 @@ import com.example.resttodo.model.UserEntity;
 import com.example.resttodo.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -28,7 +29,13 @@ public class UserService {
     }
 
     //아이디, 비밀번호로 엔티티 찾아오기
-    public UserEntity getByCredentials(final String username, final String password) {
-        return userRepository.findByUsernameAndPassword(username, password);
+    public UserEntity getByCredentials(final String username, final String password, final PasswordEncoder encoder) {
+        final UserEntity originalUser = userRepository.findByUsername(username);
+
+        //matches 메서드를 이용해 패스워드가 같은지 확인
+        if(originalUser != null && encoder.matches(password, originalUser.getPassword())){
+            return originalUser;
+        }
+        return null;
     }
 }
