@@ -6,6 +6,7 @@ import com.example.resttodo.model.TodoEntity;
 import com.example.resttodo.service.TodoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -29,15 +30,14 @@ public class TodoController {
   }
 
   @PostMapping
-  public ResponseEntity<?> createTodo(@RequestBody TodoDTO dto) {
+  public ResponseEntity<?> createTodo(@AuthenticationPrincipal String userId, @RequestBody TodoDTO dto) {
     try {
       // (1) TodoDTO -> TodoEntity 변환
       TodoEntity entity = TodoDTO.toEntity(dto);
       entity.setId(null); //(2) 생성 당시에는 id가 없어야함
 
-      // (3) 아이디 설정 - 인증 인가시 수정
-      String temporaryUserId = "temporary-user";
-      entity.setUserId(temporaryUserId);
+      // (3) jwt에서 받은 userId를 넘긴다.
+      entity.setUserId(userId);
 
       // (4) Todo 생성
       List<TodoEntity> entities = service.create(entity);
@@ -59,10 +59,9 @@ public class TodoController {
   }
 
   @GetMapping
-  public ResponseEntity<?> retrieveTodoList(){
-    String temporaryUserId = "temporary-user";
+  public ResponseEntity<?> retrieveTodoList(@AuthenticationPrincipal String userId){
     // (1) get todo list
-    List<TodoEntity> entities = service.retrieve(temporaryUserId);
+    List<TodoEntity> entities = service.retrieve(userId);
 
     // (2) entity -> TodoDTO
     List<TodoDTO> dtos = entities.stream().map(TodoDTO::new).collect(Collectors.toList());
@@ -75,11 +74,10 @@ public class TodoController {
   }
 
   @PutMapping
-  public ResponseEntity<?> updateTodo(@RequestBody TodoDTO dto) {
-    String temporaryUserId = "temporary-user";
+  public ResponseEntity<?> updateTodo(@AuthenticationPrincipal String userId, @RequestBody TodoDTO dto) {
     // (1) TodoDto -> entity 변환
     TodoEntity entity = TodoDTO.toEntity(dto);
-    entity.setUserId(temporaryUserId); // (2) 아이디 설정 - 인증 인가시 수정
+    entity.setUserId(userId); // (2) jwt에서 받은 userId를 넘긴다.
 
     // (3) entity update
     List<TodoEntity> entities = service.update(entity);
@@ -95,12 +93,11 @@ public class TodoController {
   }
 
   @DeleteMapping
-  public ResponseEntity<?> deleteTodo(@RequestBody TodoDTO dto) {
+  public ResponseEntity<?> deleteTodo(@AuthenticationPrincipal String userId, @RequestBody TodoDTO dto) {
     try {
-      String temporaryUserId = "temporary-user"; // temporary user id.
       // (1) TodoDTO -> TodoEntity 변환
       TodoEntity entity = TodoDTO.toEntity(dto);
-      entity.setUserId(temporaryUserId); // (2) 아이디 설정 - 인증 인가시 수정
+      entity.setUserId(userId); // (2) jwt에서 받은 userId를 넘긴다.
 
       // (3) entity delete
       List<TodoEntity> entities = service.delete(entity);

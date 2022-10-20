@@ -38,4 +38,15 @@ public class TokenProvider {
                 .setExpiration(expiryDate) // exp 만료시간
                 .compact();
     }
+
+    //jwt 검증 후 아이디 추출
+    public String validateAndGetUserId(String token) {
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(key) // (header + payload)--secret key--> signature를 토큰의 signature랑 비교할거임
+                .build()
+                .parseClaimsJws(token)// token을 Base 64로 디코딩 및 파싱
+                .getBody(); // userId가 필요하므로 getBody, 위조되지 않았다면 payload(Claims) 리턴
+
+        return claims.getSubject();
+    }
 }
